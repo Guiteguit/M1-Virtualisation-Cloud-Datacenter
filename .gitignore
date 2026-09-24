@@ -1,0 +1,30 @@
+# secrets
+*.key
+*.pem
+*.token
+.env
+.env.*
+secrets/
+
+# disks / backups / images
+*.qcow2
+*.raw
+*.vmdk
+*.vma
+*.vma.zst
+*.iso
+
+# terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# temporary
+*.tmp
+*.log

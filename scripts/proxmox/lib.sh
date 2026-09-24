@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
-pass=0; warn=0; fail=0
-PASS(){ echo "[PASS] $*"; pass=$((pass+1)); }
-WARN(){ echo "[WARN] $*"; warn=$((warn+1)); }
-FAIL(){ echo "[FAIL] $*"; fail=$((fail+1)); }
-END(){
-  echo "--------------------------------"
-  echo "PASS=$pass WARN=$warn FAIL=$fail"
-  if [ "$fail" -eq 0 ]; then echo "STATUS: READY"; exit 0; else echo "STATUS: FIX REQUIRED"; exit 1; fi
-}
+PASSN=0; WARNN=0; FAILN=0
+PASS(){ echo "[PASS] $*"; PASSN=$((PASSN+1)); }
+WARN(){ echo "[WARN] $*"; WARNN=$((WARNN+1)); }
+FAIL(){ echo "[FAIL] $*"; FAILN=$((FAILN+1)); }
+END(){ echo "PASS=$PASSN WARN=$WARNN FAIL=$FAILN"; [ "$FAILN" -eq 0 ] && exit 0 || exit 1; }

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/lib.sh"
-G="${1:?group required}"; N="${2:?student required}"
-ipx="10.100.${G}.$((10+N))"
-ip link show vmbr1 >/dev/null 2>&1 && PASS "vmbr1 exists" || FAIL "vmbr1 missing"
-ip -4 -o addr show dev vmbr1 2>/dev/null | grep -q "$ipx/" && PASS "vmbr1 has $ipx" || FAIL "Expected underlay IP missing"
-ip route | grep -q '^default ' && PASS "Default route present" || WARN "No default route"
-ip link show vmbr10 >/dev/null 2>&1 && PASS "vmbr10 exists" || WARN "vmbr10 local bridge not found"
+G="${1:?groupe}"; N="${2:?étudiant 1-3}"
+IP="10.100.${G}.$((10+N))"
+ip link show vmbr1 >/dev/null 2>&1 && PASS "vmbr1 présent" || FAIL "vmbr1 absent"
+ip -4 -o addr show dev vmbr1 2>/dev/null | grep -q "$IP/" && PASS "$IP présent" || FAIL "$IP absent de vmbr1"
+ip route | grep -q '^default ' && PASS "default route présente" || WARN "pas de default route"
+ip link show vmbr10 >/dev/null 2>&1 && PASS "vmbr10 présent" || WARN "vmbr10 absent"
 END

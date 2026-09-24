@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/lib.sh"
-qm status 110 >/dev/null 2>&1 && PASS "VM110 exists" || FAIL "VM110 missing"
-pct status 210 >/dev/null 2>&1 && PASS "CT210 exists" || FAIL "CT210 missing"
-qm config 110 2>/dev/null | grep -q 'zfs-lab:' && PASS "VM110 uses zfs-lab" || WARN "VM110 disk not detected on zfs-lab"
-pct config 210 2>/dev/null | grep -q 'zfs-lab:' && PASS "CT210 uses zfs-lab" || WARN "CT210 rootfs not detected on zfs-lab"
+qm config 110 >/dev/null 2>&1 && PASS "VM110 existe" || WARN "VM110 absente"
+pct config 210 >/dev/null 2>&1 && PASS "CT210 existe" || WARN "CT210 absent"
+qm config 9000 2>/dev/null | grep -q 'template: 1' && PASS "template 9000 OK" || FAIL "template 9000 absent"
+for id in 111 121 131; do qm config "$id" >/dev/null 2>&1 && PASS "VM$id existe" || WARN "VM$id absente"; done
 END

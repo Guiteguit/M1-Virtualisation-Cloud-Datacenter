@@ -1,110 +1,141 @@
 # M1 — Virtualisation Cloud & Datacenter avancée
-## VMware & Proxmox VE — 18 heures
+## VMware (théorie) & Proxmox VE (pratique) — 12 h
 
-**Fil rouge : NovaCorp Datacenter**
+Fil rouge : **NovaCorp Datacenter**.
 
-Cours destiné à des étudiants de Master 1 déjà autonomes en Linux, réseau et administration système.
+Ce dépôt contient le parcours étudiant. Le cours se déroule en groupes de **2 à 3 étudiants** avec **un nœud Proxmox principal par étudiant**. Les nœuds sont réellement répartis sur plusieurs PC et reliés par un switch manageable.
 
-## Choix pédagogiques
+## Organisation du cours
 
-- VMware/vSphere : théorie, vocabulaire et comparaison d'architecture.
-- Proxmox VE : cœur pratique du cours.
-- 2 à 3 étudiants par groupe.
-- 1 PC physique + 1 nœud PVE principal par étudiant.
-- Cluster réellement distribué entre plusieurs PC via un switch manageable.
-- Peu de « cliquez ici » : objectifs, indices, diagnostics et challenges.
-- Trois niveaux : **GUIDÉ**, **CHALLENGE**, **EXPERT**.
-- Infrastructure conservée et enrichie tout au long du cours.
-- Final Boss de 3 h avec pannes multiples et restitution d'incident.
+| Bloc | Durée | Sujet |
+|---|---:|---|
+| PRE-LAB | avant cours | VMware Workstation, nested virtualization, VM PVE, câblage |
+| S1 | 1 h 30 | VMware vs Proxmox + découverte PVE |
+| S2 | 1 h 30 | Réseau Proxmox / Linux Bridge / underlay |
+| S3 | 1 h 30 | Cluster / Corosync / quorum / QDevice |
+| S4 | 1 h 30 | LVM-thin / ZFS / snapshots / incident disque |
+| S5 | 1 h 30 | VM / LXC / template / Cloud-Init |
+| S6 | 1 h 30 | Migration / réplication ZFS / HA |
+| S7 | 1 h 30 | PBS / restauration / RBAC / sécurité |
+| S8 | 1 h 30 | FINAL BOSS NovaCorp |
 
-## Version de référence
+Le ratio cible est d'environ **3 h de théorie/débrief pour 9 h de pratique**.
 
-Le cours cible **Proxmox VE 9.2** et **Proxmox Backup Server 4.2**.
+## Architecture du groupe
 
-## Prérequis poste étudiant
+```text
+                       SWITCH MANAGEABLE
+                      VLAN underlay groupe
+                             |
+             +---------------+---------------+
+             |               |               |
+          PC ETU1         PC ETU2         PC ETU3
+          VMware          VMware          VMware
+             |               |               |
+           PVE01           PVE02           PVE03
+```
+
+Groupe de deux : PVE01 + PVE02 + **QDevice externe** fourni par le formateur.
+
+## Ressources minimales par étudiant
 
 - Windows 10/11
 - VMware Workstation Pro
-- 16 Go RAM minimum
+- 16 Go de RAM minimum
 - 8 CPU logiques minimum
-- VT-x/AMD-V actif
+- virtualisation matérielle active
 - ~100 Go libres recommandés
-- Wi-Fi ou interface principale pour Internet
-- Ethernet dédié au LAB, intégré ou USB-Ethernet recommandé
+- une NIC Ethernet dédiée au LAB recommandée
+- Wi-Fi ou autre interface pour Internet
 
-## VM PVE par étudiant
-
-```text
-4 vCPU
-6 à 7 Go RAM
-64 Go système
-20 Go disque ZFS #1
-20 Go disque ZFS #2
-
-NIC1 -> VMnet8 / NAT / Internet
-NIC2 -> VMnet2 / Bridged vers NIC LAB / Underlay
-NIC3 -> VMnet1 / Host-Only / OOB optionnel
-```
-
-## Réseau physique
-
-Le transport principal du cours est volontairement simple et fiable :
+## VM Proxmox recommandée
 
 ```text
-Groupe 1 -> VLAN 101 access -> 10.100.1.0/24
-Groupe 2 -> VLAN 102 access -> 10.100.2.0/24
-Groupe 3 -> VLAN 103 access -> 10.100.3.0/24
-...
+CPU      : 4 vCPU
+RAM      : 6 à 7 Go
+DISK0    : 64 Go système
+DISK1    : 20 Go ZFS
+DISK2    : 20 Go ZFS
+NIC1     : VMnet8 / NAT / Internet
+NIC2     : VMnet2 / Bridged vers NIC LAB
+NIC3     : VMnet1 / Host-Only / OOB (optionnelle)
 ```
-
-Le trunk 802.1Q transparent à travers Windows + VMware Workstation n'est **pas** requis pour le parcours principal. Il reste un challenge EXPERT si le matériel a été validé au préalable.
-
-Les réseaux applicatifs inter-nœuds seront transportés plus tard en **VXLAN via Proxmox SDN**.
 
 ## Plan d'adressage
 
 Pour le groupe `G` :
 
 ```text
-VLAN UNDERLAY : 100 + G
-UNDERLAY      : 10.100.G.0/24
+VLAN underlay = 100 + G
+Réseau        = 10.100.G.0/24
 
-PC ETU1       : 10.100.G.101
-PC ETU2       : 10.100.G.102
-PC ETU3       : 10.100.G.103
+PC ETU1       = 10.100.G.101/24
+PC ETU2       = 10.100.G.102/24
+PC ETU3       = 10.100.G.103/24
 
-PVE01         : 10.100.G.11
-PVE02         : 10.100.G.12
-PVE03         : 10.100.G.13
+PVE01         = 10.100.G.11/24
+PVE02         = 10.100.G.12/24
+PVE03         = 10.100.G.13/24
 ```
 
-Pas de default gateway sur la NIC Windows LAB.
+La NIC LAB Windows ne porte **pas de default gateway**. L'accès Internet de PVE utilise VMnet8/NAT.
 
-Le défaut route de PVE passe par VMnet8/NAT.
+## Niveaux des exercices
 
-## Ordre du cursus
+- 🟢 **GUIDÉ** : attendu de toute l'équipe.
+- 🟠 **CHALLENGE** : objectif donné, moins d'indices.
+- 🔴 **EXPERT** : problème ouvert pour les groupes rapides.
 
-> Important : le cluster est créé **avant** les guests persistants.
+Les bonus ne bloquent jamais la progression principale.
 
-| TP | Sujet | Difficulté |
-|---|---|---|
-| TP00 | Préparation VMware + switch + LAB | ⭐ |
-| TP01 | Installation & découverte PVE | ⭐ |
-| TP02 | Linux bridge & underlay | ⭐⭐ |
-| TP03 | Cluster, Corosync, quorum, QDevice | ⭐⭐⭐ |
-| TP04 | LVM-thin, ZFS, snapshots | ⭐⭐⭐ |
-| TP05 | VM & LXC | ⭐⭐ |
-| TP06 | Template & Cloud-Init | ⭐⭐⭐ |
-| TP07 | SDN/VXLAN, migration, réplication, HA | ⭐⭐⭐⭐ |
-| TP08 | Sauvegarde & PBS | ⭐⭐⭐ |
-| TP09 | RBAC, API token, firewall | ⭐⭐⭐⭐ |
-| FINAL | Incident NovaCorp | 💀 |
+## Git / livrables
 
-## Règles
+Le dépôt doit être cloné ou distribué via GitHub Classroom. Chaque groupe conserve ses livrables dans :
 
-1. Ne réinstallez pas un nœud pour « corriger » un TP sauf autorisation.
-2. Une commande trouvée sur Internet doit pouvoir être expliquée.
+```text
+deliverables/
+└── group-G/
+    ├── TP01.md
+    ├── TP02.md
+    ├── TP03.md
+    ├── TP04.md
+    ├── TP05.md
+    ├── TP06.md
+    ├── TP07.md
+    └── FINAL-REPORT.md
+```
+
+On ne demande **pas** une capture de chaque clic. Les preuves utiles sont : sorties de commandes, configurations, schémas, diagnostics et tests.
+
+## Règles du LAB
+
+1. Pas de réinstallation pour masquer un problème sans accord du formateur.
+2. Pas de `pvecm expected` comme solution normale à un problème de quorum.
 3. Un reboot n'est pas une analyse de cause racine.
-4. Toute modification réseau importante doit avoir un plan de rollback.
-5. Avant une manipulation cluster dangereuse : vérifier le quorum.
-6. `pvecm expected` n'est pas un outil de fonctionnement normal du LAB.
+4. Avant une modification réseau risquée : prévoir un rollback ou conserver la console VMware.
+5. Aucun secret, token API ou mot de passe dans Git.
+6. Ne passez pas au TP suivant avec un `[FAIL]` non compris.
+
+## Parcours
+
+```text
+PRE-LAB
+  ↓
+TP01 Découverte
+  ↓
+TP02 Réseau
+  ↓
+TP03 Cluster & Quorum
+  ↓
+TP04 ZFS
+  ↓
+TP05 VM/LXC + Cloud-Init
+  ↓
+TP06 Migration + HA
+  ↓
+TP07 Backup + Sécurité
+  ↓
+FINAL BOSS
+```
+
+Les sujets plus longs (SDN/VXLAN, Ceph, API, Terraform, EVPN) sont conservés dans `BONUS/`.
